@@ -1,0 +1,49 @@
+Use JavaScript, HTML, and CSS (primarily using Canvas) to quickly develop a small ball bouncing game (similar to a single-player defense version of Breakout or Pong). The key is vibe coding.
+
+## Game Objective
+- A small bouncing ball is placed on the canvas. The player uses the paddle below to move the ball left and right to prevent it from falling off the bottom of the canvas.
+- The ball bounces when it hits the four edges of the canvas (up, down, left, and right). The game ends when it hits the bottom and is not caught by the paddle.
+
+## Basic Requirements
+1. Canvas
+- Fixed size (e.g., 800x600), adjustable with parameters.
+- Draw the ball, paddle, score, and game prompt text on the canvas.
+
+2. Ball
+- Draw a circle with position (x, y), velocity (vx, vy), and radius r. - Updates position based on velocity each frame and handles collisions with canvas boundaries (bounces horizontally and against the top boundary; game over if the bottom boundary isn't caught).
+- Changes the bounce direction based on the collision position when hitting the paddle (the paddle center offset can be used to adjust the ball's vx coordinate for enhanced control).
+
+3. Paddle
+- Located at the bottom of the canvas, it can be moved using the left and right arrow keys or A/D controls.
+- Restricts the paddle's left and right movement within the canvas (doesn't go outside the boundaries).
+
+4. Collision Detection
+- Ball-paddle collision: Circular vs. rectangular collision logic (or, simplified, if the ball's Y coordinate is close and its X coordinate falls within the paddle's bounds).
+- Ball-to-canvas left/right/top boundaries: Inverts the relative velocity components.
+- Ball-to-bottom: If uncaught, displays "Game Over".
+
+5. Scoring and Levels (Basic)
+- Each successful catch earns 1 point. - Design a simple speed-increasing mechanism: every N minutes or after a certain score threshold, the ball's speed increases slightly, increasing the difficulty.
+
+## Technical Details
+- Use `requestAnimationFrame` as the main game loop.
+- Encapsulate game state (position, speed, score, whether the game is in progress) in a single object or simple module for quick modification during vibe coding.
+- Event listeners: `keydown` / `keyup` control board movement; avoid duplicate detection (use flags to record key states).
+- Screen drawing order: Clear canvas → Draw ball → Draw board → Draw HUD (score/prompt).
+
+## Additional Optional Features (not required, but recommended as an extension)
+- Multiple lives system (e.g., 3 lives): deduct one life when the ball falls, and Game Over when the life reaches 0.
+- Pause/Resume (press P key).
+- Collision and key press sound effects (use simple audio). - A settings menu to adjust the board width or the ball's initial speed.
+- Display the current FPS or debug information for development (speed, coordinates).
+- Add bricks and destruction detection to turn the game into a complete Breakout (extended challenge).
+
+## Development Suggestions (Vibe Coding Process)
+1. Day 1: Create HTML/CSS and Canvas, implement ball drawing and basic movement (fixed speed and direction), using `requestAnimationFrame`.
+2. Day 2: Add canvas boundary bounce logic and board drawing, and implement left and right button control.
+3. Day 3: Add ball and board collision detection, implement Game Over logic, and a score system.
+4. Day 4: Add a speed ramp, health system, or pause function, and optimize collision feel and drawing order.
+5. Day 5: Add sound effects, a settings menu, and comment and organize the code before submission.
+
+## Delivery Format
+- Provides a single HTML file (including CSS and JS) or three separate files (index.html, style.css, main.js) for easy browser testing.
