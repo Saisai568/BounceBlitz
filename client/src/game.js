@@ -59,6 +59,16 @@ class BallBouncingGame {
         this.scoreThreshold = 10; // Points needed to advance level
         this.speedIncrement = 0.5; // Speed increase per level
         
+        // Settings
+        this.settings = {
+            paddleWidth: 120,
+            initialSpeed: 4,
+            soundEnabled: true
+        };
+        this.previousScreen = null; // For settings screen navigation
+        this.loadSettings();
+        
+        this.setupSettingsListeners();
         console.log('Ball Bouncing Game initialized');
     }
     
@@ -78,6 +88,9 @@ class BallBouncingGame {
             // Handle sound toggle
             if (e.key.toLowerCase() === 'm') {
                 this.toggleSound();
+                // Persist sound setting to match settings menu
+                this.settings.soundEnabled = this.soundEnabled;
+                this.saveSettings();
             }
             
             console.log(`Key pressed: ${e.key}`);
@@ -196,7 +209,7 @@ class BallBouncingGame {
         this.score = 0;
         this.lives = 3;
         this.level = 1;
-        this.ball.speed = 4;
+        this.ball.speed = this.settings.initialSpeed; // Use settings instead of hardcoded value
         this.particles = [];
         this.screenShake = 0;
         this.ballLost = false; // Reset ball lost flag
@@ -211,6 +224,9 @@ class BallBouncingGame {
     resetBall() {
         this.ball.x = this.width / 2;
         this.ball.y = this.height / 2;
+        
+        // Apply current speed setting
+        this.ball.speed = this.settings.initialSpeed;
         
         // Random angle between -60 and 60 degrees, but not too vertical
         const angle = (Math.random() - 0.5) * Math.PI / 3;
@@ -361,8 +377,8 @@ class BallBouncingGame {
         if (newLevel > this.level) {
             this.level = newLevel;
             
-            // Increase ball speed
-            this.ball.speed = Math.min(this.ball.maxSpeed, 4 + (this.level - 1) * this.speedIncrement);
+            // Increase ball speed based on user's initial speed setting
+            this.ball.speed = Math.min(this.ball.maxSpeed, this.settings.initialSpeed + (this.level - 1) * this.speedIncrement);
             
             // Normalize velocity to new speed
             const currentSpeed = Math.sqrt(this.ball.vx * this.ball.vx + this.ball.vy * this.ball.vy);
@@ -556,7 +572,7 @@ class BallBouncingGame {
     }
     
     hideAllScreens() {
-        const screens = ['startScreen', 'gameOverScreen', 'pauseScreen'];
+        const screens = ['startScreen', 'gameOverScreen', 'pauseScreen', 'settingsScreen'];
         screens.forEach(screenId => {
             const screen = document.getElementById(screenId);
             if (screen) {
@@ -580,6 +596,198 @@ class BallBouncingGame {
         if (this.gameState === 'playing' || this.gameState === 'paused') {
             this.animationFrame = requestAnimationFrame((time) => this.gameLoop(time));
         }
+    }
+    
+    loadSettings() {
+        // Load settings from localStorage
+        const savedSettings = localStorage.getItem('ballBouncingGameSettings');
+        if (savedSettings) {
+            try {
+                const parsed = JSON.parse(savedSettings);
+                this.settings = { ...this.settings, ...parsed };
+            } catch (e) {
+                console.log('Error loading settings:', e);
+            }
+        }
+        
+        // Apply settings to game objects
+        this.applySettings();
+    }
+    
+    saveSettings() {
+        localStorage.setItem('ballBouncingGameSettings', JSON.stringify(this.settings));
+        console.log('Settings saved:', this.settings);
+    }
+    
+    applySettings() {
+        // Apply paddle width
+        this.paddle.width = this.settings.paddleWidth;
+        
+        // Clamp paddle position to new bounds
+        this.paddle.x = Math.max(0, Math.min(this.width - this.paddle.width, this.paddle.x));
+        
+        // Apply ball speed (will take effect on next ball reset)
+        // Don't change current ball speed mid-game unless it's starting/resetting
+        if (this.gameState === 'start' || this.ballLost) {
+            this.ball.speed = this.settings.initialSpeed;
+        }
+        
+        // Apply sound setting immediately
+        this.soundEnabled = this.settings.soundEnabled;
+        if (this.backgroundMusic) {
+            if (this.soundEnabled && this.gameState === 'playing') {
+                this.backgroundMusic.play().catch(e => console.log('Music play prevented:', e));
+            } else {
+                this.backgroundMusic.pause();
+            }
+        }
+        
+        console.log('Settings applied:', this.settings);
+    }
+    
+    setupSettingsListeners() {
+        // Settings button
+        const settingsButton = document.getElementById('settingsButton');
+        if (settingsButton) {
+            settingsButton.addEventListener('click', () => {
+                this.showSettings();
+            });
+        }
+        
+        // Settings controls
+        const paddleWidthSlider = document.getElementById('paddleWidth');
+        const ballSpeedSlider = document.getElementById('ballSpeed');
+        const soundToggle = document.getElementById('soundToggle');
+        
+        if (paddleWidthSlider) {
+            paddleWidthSlider.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                document.getElementById('paddleWidthValue').textContent = value;
+            });
+        }
+        
+        if (ballSpeedSlider) {
+            ballSpeedSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                document.getElementById('ballSpeedValue').textContent = value.toFixed(1);
+            });
+        }
+        
+        // Settings buttons
+        const applySettings = document.getElementById('applySettings');
+        const resetDefaults = document.getElementById('resetDefaults');
+        const closeSettings = document.getElementById('closeSettings');
+        
+        if (applySettings) {
+            applySettings.addEventListener('click', () => {
+                this.saveCurrentSettings();
+                this.restorePreviousScreen();
+            });
+        }
+        
+        if (resetDefaults) {
+            resetDefaults.addEventListener('click', () => {
+                this.resetDefaultSettings();
+            });
+        }
+        
+        if (closeSettings) {
+            closeSettings.addEventListener('click', () => {
+                this.loadSettingsUI(); // Reset UI to saved values
+                this.restorePreviousScreen();
+            });
+        }
+    }
+    
+    showSettings() {
+        // Store current screen state for restoration
+        if (this.gameState === 'playing') {
+            this.previousScreen = 'playing';
+            this.pauseGame();
+        } else if (this.gameState === 'start') {
+            this.previousScreen = 'start';
+        } else if (this.gameState === 'paused') {
+            this.previousScreen = 'paused';
+        } else {
+            this.previousScreen = null;
+        }
+        
+        this.loadSettingsUI();
+        this.showScreen('settingsScreen');
+    }
+    
+    loadSettingsUI() {
+        // Update UI elements with current settings
+        const paddleWidthSlider = document.getElementById('paddleWidth');
+        const ballSpeedSlider = document.getElementById('ballSpeed');
+        const soundToggle = document.getElementById('soundToggle');
+        
+        if (paddleWidthSlider) {
+            paddleWidthSlider.value = this.settings.paddleWidth;
+            document.getElementById('paddleWidthValue').textContent = this.settings.paddleWidth;
+        }
+        
+        if (ballSpeedSlider) {
+            ballSpeedSlider.value = this.settings.initialSpeed;
+            document.getElementById('ballSpeedValue').textContent = this.settings.initialSpeed.toFixed(1);
+        }
+        
+        if (soundToggle) {
+            soundToggle.checked = this.settings.soundEnabled;
+        }
+    }
+    
+    saveCurrentSettings() {
+        // Get values from UI
+        const paddleWidthSlider = document.getElementById('paddleWidth');
+        const ballSpeedSlider = document.getElementById('ballSpeed');
+        const soundToggle = document.getElementById('soundToggle');
+        
+        if (paddleWidthSlider) {
+            this.settings.paddleWidth = parseInt(paddleWidthSlider.value);
+        }
+        
+        if (ballSpeedSlider) {
+            this.settings.initialSpeed = parseFloat(ballSpeedSlider.value);
+        }
+        
+        if (soundToggle) {
+            this.settings.soundEnabled = soundToggle.checked;
+        }
+        
+        // Apply and save settings
+        this.applySettings();
+        this.saveSettings();
+    }
+    
+    resetDefaultSettings() {
+        this.settings = {
+            paddleWidth: 120,
+            initialSpeed: 4,
+            soundEnabled: true
+        };
+        
+        this.applySettings();
+        this.loadSettingsUI();
+        console.log('Settings reset to defaults');
+    }
+    
+    restorePreviousScreen() {
+        this.hideAllScreens();
+        
+        if (this.previousScreen === 'playing') {
+            // Resume the game
+            this.resumeGame();
+        } else if (this.previousScreen === 'start') {
+            // Return to start screen
+            this.showScreen('startScreen');
+        } else if (this.previousScreen === 'paused') {
+            // Return to pause screen
+            this.showScreen('pauseScreen');
+        }
+        // If previousScreen is null, just hide all screens
+        
+        this.previousScreen = null;
     }
     
     destroy() {
