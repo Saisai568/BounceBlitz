@@ -16,6 +16,7 @@ class BallBouncingGame {
         this.lives = 3;
         this.level = 1;
         this.lastTime = 0;
+        this.ballLost = false; // Prevent multiple life losses
         
         // Ball properties
         this.ball = {
@@ -161,6 +162,11 @@ class BallBouncingGame {
         this.gameState = 'playing';
         this.hideAllScreens();
         
+        // Fix pause/reset edge case - if ball was lost during pause, reset it now
+        if (this.ballLost) {
+            this.resetBall();
+        }
+        
         if (this.soundEnabled && this.backgroundMusic) {
             this.backgroundMusic.play().catch(e => console.log('Music play prevented:', e));
         }
@@ -193,6 +199,7 @@ class BallBouncingGame {
         this.ball.speed = 4;
         this.particles = [];
         this.screenShake = 0;
+        this.ballLost = false; // Reset ball lost flag
         
         // Update UI
         this.updateUI();
@@ -216,6 +223,7 @@ class BallBouncingGame {
         if (this.ball.vy < 0) this.ball.vy = -this.ball.vy;
         
         this.ball.trail = [];
+        this.ballLost = false; // Reset the ball lost flag
     }
     
     update(deltaTime) {
@@ -276,7 +284,8 @@ class BallBouncingGame {
         this.checkPaddleCollision();
         
         // Bottom boundary (game over condition)
-        if (this.ball.y - this.ball.radius > this.height) {
+        if (this.ball.y - this.ball.radius > this.height && !this.ballLost) {
+            this.ballLost = true;
             this.loseLife();
         }
     }
