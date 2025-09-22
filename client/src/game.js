@@ -55,9 +55,19 @@ class BallBouncingGame {
         this.particles = [];
         this.screenShake = 0;
         
-        // Level progression
-        this.scoreThreshold = 10; // Points needed to advance level
+        // Level progression (score threshold removed - levels advance by brick clearing only)
         this.speedIncrement = 0.5; // Speed increase per level
+        
+        // Bricks system
+        this.bricks = [];
+        this.brickRows = 6;
+        this.brickCols = 10;
+        this.brickWidth = 75;
+        this.brickHeight = 25;
+        this.brickPadding = 5;
+        this.brickOffsetTop = 60;
+        this.brickOffsetLeft = 35;
+        this.brickColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
         
         // Settings
         this.settings = {
@@ -68,8 +78,11 @@ class BallBouncingGame {
         this.previousScreen = null; // For settings screen navigation
         this.loadSettings();
         
+        // Initialize bricks
+        this.createBricks();
+        
         this.setupSettingsListeners();
-        console.log('Ball Bouncing Game initialized');
+        console.log('Ball Bouncing Game initialized with', this.bricks.length, 'bricks');
     }
     
     setupEventListeners() {
@@ -214,6 +227,9 @@ class BallBouncingGame {
         this.screenShake = 0;
         this.ballLost = false; // Reset ball lost flag
         
+        // Recreate bricks
+        this.createBricks();
+        
         // Update UI
         this.updateUI();
         
@@ -225,12 +241,12 @@ class BallBouncingGame {
         this.ball.x = this.width / 2;
         this.ball.y = this.height / 2;
         
-        // Apply current speed setting
-        this.ball.speed = this.settings.initialSpeed;
+        // Use current ball speed (preserve level-based speed) or fallback to initial speed
+        const speed = this.ball.speed ?? this.settings.initialSpeed;
+        this.ball.speed = speed;
         
         // Random angle between -60 and 60 degrees, but not too vertical
         const angle = (Math.random() - 0.5) * Math.PI / 3;
-        const speed = this.ball.speed;
         
         this.ball.vx = Math.sin(angle) * speed;
         this.ball.vy = Math.cos(angle) * speed;
@@ -242,6 +258,27 @@ class BallBouncingGame {
         this.ballLost = false; // Reset the ball lost flag
     }
     
+    createBricks() {
+        this.bricks = [];
+        
+        for (let row = 0; row < this.brickRows; row++) {
+            for (let col = 0; col < this.brickCols; col++) {
+                const brick = {
+                    x: this.brickOffsetLeft + col * (this.brickWidth + this.brickPadding),
+                    y: this.brickOffsetTop + row * (this.brickHeight + this.brickPadding),
+                    width: this.brickWidth,
+                    height: this.brickHeight,
+                    color: this.brickColors[row % this.brickColors.length],
+                    points: (this.brickRows - row) * 10, // Higher rows worth more points
+                    visible: true
+                };
+                this.bricks.push(brick);
+            }
+        }
+        
+        console.log(`Created ${this.bricks.length} bricks in ${this.brickRows} rows`);
+    }
+    
     update(deltaTime) {
         if (this.gameState !== 'playing') return;
         
@@ -249,7 +286,7 @@ class BallBouncingGame {
         this.updateBall(deltaTime);
         this.updateParticles(deltaTime);
         this.updateScreenShake(deltaTime);
-        this.checkLevelProgression();
+        // Note: Level progression now handled only by brick clearing in checkLevelComplete
     }
     
     updatePaddle(deltaTime) {
@@ -295,6 +332,9 @@ class BallBouncingGame {
             this.addParticles(this.ball.x, this.ball.y, '#FFD700');
             this.screenShake = 5;
         }
+        
+        // Brick collision
+        this.checkBrickCollision();
         
         // Paddle collision
         this.checkPaddleCollision();
@@ -350,6 +390,56 @@ class BallBouncingGame {
         }
     }
     
+    checkBrickCollision() {
+        for (let i = 0; i < this.bricks.length; i++) {
+            const brick = this.bricks[i];
+            if (!brick.visible) continue;
+            
+            // Check collision between ball and brick
+            if (this.ball.x + this.ball.radius >= brick.x &&
+                this.ball.x - this.ball.radius <= brick.x + brick.width &&
+                this.ball.y + this.ball.radius >= brick.y &&
+                this.ball.y - this.ball.radius <= brick.y + brick.height) {
+                
+                // Determine which side of the brick was hit
+                const ballCenterX = this.ball.x;
+                const ballCenterY = this.ball.y;
+                const brickCenterX = brick.x + brick.width / 2;
+                const brickCenterY = brick.y + brick.height / 2;
+                
+                const deltaX = ballCenterX - brickCenterX;
+                const deltaY = ballCenterY - brickCenterY;
+                
+                // Determine collision side based on overlap
+                if (Math.abs(deltaX / brick.width) > Math.abs(deltaY / brick.height)) {
+                    // Hit left or right side
+                    this.ball.vx = -this.ball.vx;
+                } else {
+                    // Hit top or bottom side
+                    this.ball.vy = -this.ball.vy;
+                }
+                
+                // Destroy the brick
+                brick.visible = false;
+                
+                // Add score
+                this.score += brick.points;
+                this.updateUI();
+                
+                // Visual effects
+                this.playSound(this.hitSound);
+                this.addParticles(brick.x + brick.width / 2, brick.y + brick.height / 2, brick.color);
+                this.screenShake = 6;
+                
+                // Check if all bricks are destroyed
+                this.checkLevelComplete();
+                
+                console.log(`Brick destroyed! Score: ${this.score}`);
+                break; // Only hit one brick per frame
+            }
+        }
+    }
+    
     loseLife() {
         this.lives -= 1;
         this.updateUI();
@@ -372,23 +462,41 @@ class BallBouncingGame {
         console.log(`Life lost! Lives remaining: ${this.lives}`);
     }
     
-    checkLevelProgression() {
-        const newLevel = Math.floor(this.score / this.scoreThreshold) + 1;
-        if (newLevel > this.level) {
-            this.level = newLevel;
-            
-            // Increase ball speed based on user's initial speed setting
-            this.ball.speed = Math.min(this.ball.maxSpeed, this.settings.initialSpeed + (this.level - 1) * this.speedIncrement);
-            
-            // Normalize velocity to new speed
-            const currentSpeed = Math.sqrt(this.ball.vx * this.ball.vx + this.ball.vy * this.ball.vy);
-            this.ball.vx = (this.ball.vx / currentSpeed) * this.ball.speed;
-            this.ball.vy = (this.ball.vy / currentSpeed) * this.ball.speed;
-            
-            this.updateUI();
-            
-            console.log(`Level up! Level: ${this.level}, Speed: ${this.ball.speed}`);
+    // Level progression is now handled exclusively by brick clearing in checkLevelComplete/advanceLevel
+    // Score-based leveling disabled to prevent conflicts with Breakout gameplay
+    
+    checkLevelComplete() {
+        const visibleBricks = this.bricks.filter(brick => brick.visible);
+        if (visibleBricks.length === 0) {
+            // All bricks destroyed - advance to next level
+            this.advanceLevel();
         }
+    }
+    
+    advanceLevel() {
+        // Increase level
+        this.level += 1;
+        
+        // Increase ball speed for new level
+        this.ball.speed = Math.min(this.ball.maxSpeed, this.settings.initialSpeed + (this.level - 1) * this.speedIncrement);
+        
+        // Create new bricks
+        this.createBricks();
+        
+        // Reset ball position with new speed
+        this.resetBall();
+        
+        // Award bonus points for completing level
+        this.score += 100 * this.level;
+        
+        // Update UI
+        this.updateUI();
+        
+        // Visual effects
+        this.addParticles(this.width / 2, this.height / 2, '#FFD700');
+        this.screenShake = 10;
+        
+        console.log(`Level complete! Advanced to level ${this.level}, Speed: ${this.ball.speed}`);
     }
     
     addParticles(x, y, color) {
@@ -439,6 +547,7 @@ class BallBouncingGame {
         }
         
         // Render game objects
+        this.renderBricks();
         this.renderBall();
         this.renderPaddle();
         this.renderParticles();
@@ -520,6 +629,45 @@ class BallBouncingGame {
         // Paddle highlight
         this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
         this.ctx.fillRect(this.paddle.x, this.paddle.y, this.paddle.width, 3);
+    }
+    
+    renderBricks() {
+        for (const brick of this.bricks) {
+            if (!brick.visible) continue;
+            
+            // Brick shadow
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            this.ctx.fillRect(brick.x + 2, brick.y + 2, brick.width, brick.height);
+            
+            // Brick gradient
+            const brickGradient = this.ctx.createLinearGradient(
+                brick.x, brick.y,
+                brick.x, brick.y + brick.height
+            );
+            brickGradient.addColorStop(0, brick.color);
+            brickGradient.addColorStop(1, this.darkenColor(brick.color, 0.3));
+            
+            this.ctx.fillStyle = brickGradient;
+            this.ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+            
+            // Brick highlight
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            this.ctx.fillRect(brick.x, brick.y, brick.width, 3);
+            
+            // Brick border
+            this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+            this.ctx.lineWidth = 1;
+            this.ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
+        }
+    }
+    
+    darkenColor(color, amount) {
+        // Simple color darkening function
+        const hex = color.replace('#', '');
+        const r = Math.max(0, parseInt(hex.substr(0, 2), 16) * (1 - amount));
+        const g = Math.max(0, parseInt(hex.substr(2, 2), 16) * (1 - amount));
+        const b = Math.max(0, parseInt(hex.substr(4, 2), 16) * (1 - amount));
+        return `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`;
     }
     
     renderParticles() {
@@ -626,9 +774,8 @@ class BallBouncingGame {
         // Clamp paddle position to new bounds
         this.paddle.x = Math.max(0, Math.min(this.width - this.paddle.width, this.paddle.x));
         
-        // Apply ball speed (will take effect on next ball reset)
-        // Don't change current ball speed mid-game unless it's starting/resetting
-        if (this.gameState === 'start' || this.ballLost) {
+        // Apply initial ball speed only at game start, not during level progression
+        if (this.gameState === 'start') {
             this.ball.speed = this.settings.initialSpeed;
         }
         
