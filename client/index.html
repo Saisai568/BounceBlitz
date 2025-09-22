@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ball Bouncing Game</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>Ball Bouncing Game</h1>
+            <div class="game-stats">
+                <div class="stat">
+                    <span class="stat-label">Score:</span>
+                    <span id="score" class="stat-value">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Lives:</span>
+                    <span id="lives" class="stat-value">3</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Level:</span>
+                    <span id="level" class="stat-value">1</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <div id="gameOverlay" class="game-overlay">
+                <div id="startScreen" class="screen">
+                    <h2>Ball Bouncing Game</h2>
+                    <p>Use arrow keys or A/D to move the paddle</p>
+                    <p>Keep the ball from falling off the bottom!</p>
+                    <button id="startButton" class="game-button">Start Game</button>
+                </div>
+                <div id="gameOverScreen" class="screen hidden">
+                    <h2>Game Over!</h2>
+                    <p id="finalScore">Final Score: 0</p>
+                    <button id="restartButton" class="game-button">Play Again</button>
+                </div>
+                <div id="pauseScreen" class="screen hidden">
+                    <h2>Game Paused</h2>
+                    <p>Press P to resume</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="game-controls">
+            <div class="controls-info">
+                <div class="control-item">
+                    <span class="key">←→</span> or <span class="key">A</span><span class="key">D</span>
+                    <span class="description">Move paddle</span>
+                </div>
+                <div class="control-item">
+                    <span class="key">P</span>
+                    <span class="description">Pause/Resume</span>
+                </div>
+                <div class="control-item">
+                    <span class="key">M</span>
+                    <span class="description">Toggle sound</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audio elements -->
+    <audio id="hitSound" preload="auto">
+        <source src="public/sounds/hit.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="successSound" preload="auto">
+        <source src="public/sounds/success.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="backgroundMusic" preload="auto" loop>
+        <source src="public/sounds/background.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="src/game.js"></script>
+    <script src="src/main.js"></script>
+</body>
+</html>
