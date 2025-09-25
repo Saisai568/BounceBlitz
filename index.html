@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ball Bouncing Game</title>
-    <link rel="stylesheet" href="src/style.css">
+    <link rel="stylesheet" href="client/src/style.css">
 </head>
 <body>
     <div class="game-container">
@@ -94,16 +94,18 @@
     
     <!-- Audio elements -->
     <audio id="hitSound" preload="auto">
-        <source src="/sounds/hit.mp3" type="audio/mpeg">
+        <source src="client/public/sounds/hit.mp3" type="audio/mpeg">
     </audio>
     <audio id="successSound" preload="auto">
-        <source src="/sounds/success.mp3" type="audio/mpeg">
+        <source src="client/public/sounds/success.mp3" type="audio/mpeg">
     </audio>
     <audio id="backgroundMusic" preload="auto" loop>
-        <source src="/sounds/background.mp3" type="audio/mpeg">
+        <source src="client/public/sounds/background.mp3" type="audio/mpeg">
     </audio>
 
-    <script src="src/game.js"></script>
-    <script src="src/main.js"></script>
+    <script src="client/src/game.js"></script>
+    <script src="client/src/main.js"></script>
 </body>
 </html>
+
+
