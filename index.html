@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ball Bouncing Game</title>
+    <title id="pageTitle">Ball Bouncing Game</title>
     <link rel="stylesheet" href="client/src/style.css">
 </head>
 <body>
     <div class="game-container">
         <div class="game-header">
-            <h1>Ball Bouncing Game</h1>
+            <h1 id="titleText">Ball Bouncing Game</h1>
             <div class="game-stats">
                 <div class="stat">
-                    <span class="stat-label">Score:</span>
+                    <span id="scoreLabel" class="stat-label">Score:</span>
                     <span id="score" class="stat-value">0</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-label">Lives:</span>
+                    <span id="livesLabel" class="stat-label">Lives:</span>
                     <span id="lives" class="stat-value">3</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-label">Level:</span>
-                    <span id="level" class="stat-value">1</span>
+                    <span id="levelLabel" class="stat-label">Level:</span>
+                    <spaㄠn id="level" class="stat-value">1</span>
                 </div>
             </div>
         </div>
@@ -30,35 +30,43 @@
             <canvas id="gameCanvas" width="800" height="600"></canvas>
             <div id="gameOverlay" class="game-overlay">
                 <div id="startScreen" class="screen">
-                    <h2>Ball Bouncing Game</h2>
-                    <p>Use arrow keys or A/D to move the paddle</p>
-                    <p>Keep the ball from falling off the bottom!</p>
+                    <h2 id="startTitle">Ball Bouncing Game</h2>
+                    <p id="startTip1">Use arrow keys or A/D to move the paddle</p>
+                    <p id="startTip2">Keep the ball from falling off the bottom!</p>
                     <button id="startButton" class="game-button">Start Game</button>
                 </div>
                 <div id="gameOverScreen" class="screen hidden">
-                    <h2>Game Over!</h2>
+                    <h2 id="gameOverTitle">Game Over!</h2>
                     <p id="finalScore">Final Score: 0</p>
                     <button id="restartButton" class="game-button">Play Again</button>
                 </div>
                 <div id="pauseScreen" class="screen hidden">
-                    <h2>Game Paused</h2>
-                    <p>Press P to resume</p>
+                    <h2 id="pauseTitle">Game Paused</h2>
+                    <p id="pauseTip">Press P to resume</p>
                 </div>
                 <div id="settingsScreen" class="screen hidden">
-                    <h2>Game Settings</h2>
+                    <h2 id="settingsTitle">Game Settings</h2>
                     <div class="settings-container">
                         <div class="setting-item">
-                            <label for="paddleWidth">Paddle Width:</label>
+                            <label id="labelLanguage" for="languageSelect">Language:</label>
+                            <select id="languageSelect">
+                                <option id="langOptEn" value="en">English</option>
+                                <option id="langOptZhTW" value="zh-TW">Traditional Chinese</option>
+                                <option id="langOptJa" value="ja">Japanese</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label id="labelPaddleWidth" for="paddleWidth">Paddle Width:</label>
                             <input type="range" id="paddleWidth" min="80" max="200" value="120" step="10">
                             <span id="paddleWidthValue">120</span> px
                         </div>
                         <div class="setting-item">
-                            <label for="ballSpeed">Initial Ball Speed:</label>
+                            <label id="labelBallSpeed" for="ballSpeed">Initial Ball Speed:</label>
                             <input type="range" id="ballSpeed" min="2" max="8" value="4" step="0.5">
                             <span id="ballSpeedValue">4.0</span>
                         </div>
                         <div class="setting-item">
-                            <label for="soundToggle">Sound Effects:</label>
+                            <label id="labelSoundEffects" for="soundToggle">Sound Effects:</label>
                             <input type="checkbox" id="soundToggle" checked>
                         </div>
                     </div>
@@ -75,15 +83,15 @@
             <div class="controls-info">
                 <div class="control-item">
                     <span class="key">←→</span> or <span class="key">A</span><span class="key">D</span>
-                    <span class="description">Move paddle</span>
+                    <span id="descMove" class="description">Move paddle</span>
                 </div>
                 <div class="control-item">
                     <span class="key">P</span>
-                    <span class="description">Pause/Resume</span>
+                    <span id="descPause" class="description">Pause/Resume</span>
                 </div>
                 <div class="control-item">
                     <span class="key">M</span>
-                    <span class="description">Toggle sound</span>
+                    <span id="descSound" class="description">Toggle sound</span>
                 </div>
                 <div class="control-item">
                     <button id="settingsButton" class="settings-btn">Settings</button>

@@ -10,6 +10,108 @@ class BallBouncingGame {
         this.width = canvas.width;
         this.height = canvas.height;
         
+        // i18n
+        this.supportedLanguages = ['en', 'zh-TW', 'ja'];
+        this.translations = {
+            en: {
+                title: 'Ball Bouncing Game',
+                score: 'Score:',
+                lives: 'Lives:',
+                level: 'Level:',
+                start_title: 'Ball Bouncing Game',
+                start_tip1: 'Use arrow keys or A/D to move the paddle',
+                start_tip2: 'Keep the ball from falling off the bottom!',
+                start: 'Start Game',
+                game_over: 'Game Over!',
+                final_score: 'Final Score: {score}',
+                play_again: 'Play Again',
+                paused: 'Game Paused',
+                press_p_to_resume: 'Press P to resume',
+                settings_title: 'Game Settings',
+                paddle_width: 'Paddle Width:',
+                initial_ball_speed: 'Initial Ball Speed:',
+                sound_effects: 'Sound Effects:',
+                apply_settings: 'Apply Settings',
+                reset_defaults: 'Reset Defaults',
+                close: 'Close',
+                move_paddle: 'Move paddle',
+                pause_resume: 'Pause/Resume',
+                toggle_sound: 'Toggle sound',
+                settings: 'Settings',
+                speed: 'Speed: {speed}',
+                fps: 'FPS: {fps}',
+                language: 'Language:',
+                lang_en: 'English',
+                lang_zhTW: 'Traditional Chinese',
+                lang_ja: 'Japanese'
+            },
+            'zh-TW': {
+                title: '彈球遊戲',
+                score: '分數：',
+                lives: '生命：',
+                level: '關卡：',
+                start_title: '彈球遊戲',
+                start_tip1: '使用方向鍵或 A/D 移動擋板',
+                start_tip2: '讓球不要掉到下面！',
+                start: '開始遊戲',
+                game_over: '遊戲結束！',
+                final_score: '最終分數：{score}',
+                play_again: '再玩一次',
+                paused: '已暫停',
+                press_p_to_resume: '按 P 繼續',
+                settings_title: '遊戲設定',
+                paddle_width: '擋板寬度：',
+                initial_ball_speed: '初始球速：',
+                sound_effects: '音效：',
+                apply_settings: '套用設定',
+                reset_defaults: '回復預設',
+                close: '關閉',
+                move_paddle: '移動擋板',
+                pause_resume: '暫停/繼續',
+                toggle_sound: '切換音效',
+                settings: '設定',
+                speed: '速度：{speed}',
+                fps: 'FPS：{fps}',
+                language: '語言：',
+                lang_en: '英文',
+                lang_zhTW: '繁體中文',
+                lang_ja: '日文'
+            },
+            ja: {
+                title: 'ボールバウンドゲーム',
+                score: 'スコア:',
+                lives: 'ライフ:',
+                level: 'レベル:',
+                start_title: 'ボールバウンドゲーム',
+                start_tip1: '矢印キーまたは A/D でパドルを移動',
+                start_tip2: 'ボールを落とさないように！',
+                start: 'ゲーム開始',
+                game_over: 'ゲームオーバー！',
+                final_score: '最終スコア: {score}',
+                play_again: 'もう一度',
+                paused: '一時停止中',
+                press_p_to_resume: 'P キーで再開',
+                settings_title: 'ゲーム設定',
+                paddle_width: 'パドル幅:',
+                initial_ball_speed: '初期ボール速度:',
+                sound_effects: '効果音:',
+                apply_settings: '設定を適用',
+                reset_defaults: 'デフォルトに戻す',
+                close: '閉じる',
+                move_paddle: 'パドルを移動',
+                pause_resume: '一時停止/再開',
+                toggle_sound: 'サウンド切替',
+                settings: '設定',
+                speed: '速度: {speed}',
+                fps: 'FPS: {fps}',
+                language: '言語:',
+                lang_en: '英語',
+                lang_zhTW: '繁体字中国語',
+                lang_ja: '日本語'
+            }
+        };
+        this.language = this.loadLanguage ? this.loadLanguage() : (document.documentElement.getAttribute('lang') || 'en');
+        
         // Game state
         this.gameState = 'start'; // 'start', 'playing', 'paused', 'gameOver'
         this.score = 0;
@@ -82,6 +184,8 @@ class BallBouncingGame {
         this.createBricks();
         
         this.setupSettingsListeners();
+        // Apply initial translations to static DOM
+        this.applyTranslationsToDOM();
         console.log('Ball Bouncing Game initialized with', this.bricks.length, 'bricks');
     }
     
@@ -210,7 +314,7 @@ class BallBouncingGame {
         // Update final score display
         const finalScoreElement = document.getElementById('finalScore');
         if (finalScoreElement) {
-            finalScoreElement.textContent = `Final Score: ${this.score}`;
+            finalScoreElement.textContent = this.t('final_score', { score: this.score });
         }
         
         this.showScreen('gameOverScreen');
@@ -686,12 +790,12 @@ class BallBouncingGame {
         this.ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
         this.ctx.font = '14px Arial';
         this.ctx.textAlign = 'right';
-        this.ctx.fillText(`Speed: ${this.ball.speed.toFixed(1)}`, this.width - 10, 25);
+        this.ctx.fillText(this.t('speed', { speed: this.ball.speed.toFixed(1) }), this.width - 10, 25);
         
         // FPS counter (for development)
         if (this.lastTime > 0) {
             const fps = Math.round(1000 / (Date.now() - this.lastTime));
-            this.ctx.fillText(`FPS: ${fps}`, this.width - 10, 45);
+            this.ctx.fillText(this.t('fps', { fps: fps }), this.width - 10, 45);
         }
     }
     
@@ -805,6 +909,7 @@ class BallBouncingGame {
         const paddleWidthSlider = document.getElementById('paddleWidth');
         const ballSpeedSlider = document.getElementById('ballSpeed');
         const soundToggle = document.getElementById('soundToggle');
+        const languageSelect = document.getElementById('languageSelect');
         
         if (paddleWidthSlider) {
             paddleWidthSlider.addEventListener('input', (e) => {
@@ -817,6 +922,13 @@ class BallBouncingGame {
             ballSpeedSlider.addEventListener('input', (e) => {
                 const value = parseFloat(e.target.value);
                 document.getElementById('ballSpeedValue').textContent = value.toFixed(1);
+            });
+        }
+
+        if (languageSelect) {
+            languageSelect.addEventListener('change', (e) => {
+                const newLang = e.target.value;
+                this.setLanguage(newLang);
             });
         }
         
@@ -868,6 +980,7 @@ class BallBouncingGame {
         const paddleWidthSlider = document.getElementById('paddleWidth');
         const ballSpeedSlider = document.getElementById('ballSpeed');
         const soundToggle = document.getElementById('soundToggle');
+        const languageSelect = document.getElementById('languageSelect');
         
         if (paddleWidthSlider) {
             paddleWidthSlider.value = this.settings.paddleWidth;
@@ -882,6 +995,13 @@ class BallBouncingGame {
         if (soundToggle) {
             soundToggle.checked = this.settings.soundEnabled;
         }
+
+        if (languageSelect) {
+            languageSelect.value = this.language;
+        }
+
+        // Ensure labels reflect current language when opening settings
+        this.applyTranslationsToDOM();
     }
     
     saveCurrentSettings() {
@@ -889,6 +1009,7 @@ class BallBouncingGame {
         const paddleWidthSlider = document.getElementById('paddleWidth');
         const ballSpeedSlider = document.getElementById('ballSpeed');
         const soundToggle = document.getElementById('soundToggle');
+        const languageSelect = document.getElementById('languageSelect');
         
         if (paddleWidthSlider) {
             this.settings.paddleWidth = parseInt(paddleWidthSlider.value);
@@ -900,6 +1021,13 @@ class BallBouncingGame {
         
         if (soundToggle) {
             this.settings.soundEnabled = soundToggle.checked;
+        }
+
+        if (languageSelect) {
+            const newLang = languageSelect.value;
+            if (this.supportedLanguages.includes(newLang)) {
+                this.setLanguage(newLang);
+            }
         }
         
         // Apply and save settings
@@ -944,6 +1072,105 @@ class BallBouncingGame {
         
         if (this.backgroundMusic) {
             this.backgroundMusic.pause();
+        }
+    }
+
+    // i18n helpers
+    t(key, vars = {}) {
+        const dict = this.translations && this.translations[this.language] ? this.translations[this.language] : (this.translations ? this.translations['en'] : {});
+        let text = (dict && dict[key]) || key;
+        for (const k in vars) {
+            text = text.replace(`{${k}}`, vars[k]);
+        }
+        return text;
+    }
+    
+    loadLanguage() {
+        const saved = localStorage.getItem('ballBouncingGameLanguage');
+        if (saved && this.supportedLanguages.includes(saved)) return saved;
+        const htmlLang = (document.documentElement.getAttribute('lang') || '').trim();
+        if (this.supportedLanguages.includes(htmlLang)) return htmlLang;
+        const nav = (navigator.language || '').trim();
+        if (this.supportedLanguages.includes(nav)) return nav;
+        if (nav.startsWith('zh')) return 'zh-TW';
+        if (nav.startsWith('ja')) return 'ja';
+        return 'en';
+    }
+    
+    setLanguage(lang) {
+        if (!this.supportedLanguages.includes(lang)) return;
+        this.language = lang;
+        localStorage.setItem('ballBouncingGameLanguage', lang);
+        document.documentElement.setAttribute('lang', lang);
+        this.applyTranslationsToDOM();
+        this.render();
+    }
+    
+    applyTranslationsToDOM() {
+        const map = {
+            title: ['pageTitle', 'titleText'],
+            score: ['scoreLabel'],
+            lives: ['livesLabel'],
+            level: ['levelLabel'],
+            start_title: ['startTitle'],
+            start_tip1: ['startTip1'],
+            start_tip2: ['startTip2'],
+            start: ['startButton'],
+            game_over: ['gameOverTitle'],
+            final_score: ['finalScore'],
+            play_again: ['restartButton'],
+            paused: ['pauseTitle'],
+            press_p_to_resume: ['pauseTip'],
+            settings_title: ['settingsTitle'],
+            paddle_width: ['labelPaddleWidth'],
+            initial_ball_speed: ['labelBallSpeed'],
+            sound_effects: ['labelSoundEffects'],
+            apply_settings: ['applySettings'],
+            reset_defaults: ['resetDefaults'],
+            close: ['closeSettings'],
+            move_paddle: ['descMove'],
+            pause_resume: ['descPause'],
+            toggle_sound: ['descSound'],
+            settings: ['settingsButton'],
+            language: ['labelLanguage'],
+            lang_en: ['langOptEn'],
+            lang_zhTW: ['langOptZhTW'],
+            lang_ja: ['langOptJa']
+        };
+        for (const key in map) {
+            const ids = map[key];
+            const text = this.t(key, { score: this.score });
+            for (const id of ids) {
+                const el = document.getElementById(id);
+                if (!el) continue;
+                const tag = (el.tagName || '').toUpperCase();
+                try {
+                    if (id === 'finalScore') {
+                        el.textContent = this.t('final_score', { score: this.score });
+                        continue;
+                    }
+                    if (tag === 'INPUT') {
+                        el.setAttribute('aria-label', text);
+                        continue;
+                    }
+                    if (tag === 'SELECT' || tag === 'OPTION') {
+                        el.textContent = text;
+                        el.setAttribute('aria-label', text);
+                        continue;
+                    }
+                    if (tag === 'BUTTON') {
+                        el.textContent = text;
+                        el.setAttribute('title', text);
+                        continue;
+                    }
+                    if (tag === 'SPAN' || tag === 'DIV' || /^H[1-6]$/.test(tag) || tag === 'LABEL' || tag === 'TITLE') {
+                        el.textContent = text;
+                        continue;
+                    }
+                } catch (e) {
+                    console.warn('i18n apply failed for', id, e);
+                }
+            }
         }
     }
 }
